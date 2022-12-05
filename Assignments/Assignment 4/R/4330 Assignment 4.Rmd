@@ -1,0 +1,332 @@
+---
+title: "4330 Assignment 4"
+author: 'Ravish Kamath: 213893664'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+always_allow_html: true
+output:
+  pdf_document: default
+
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{accents}
+- \pagestyle{fancy}
+- \fancyhead[CO,CE]{4330 Assignment 4 R Code}
+- \fancyhead[RO,RE]{Ravish Kamath 213893664}
+---
+
+```{r, eval = TRUE, echo = FALSE, include = "FALSE"}
+
+library(magrittr)
+library(dplyr)
+library(nnet)
+library(reactable)
+library(reactablefmtr)
+
+#Reform Data set
+reform = read.csv("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Data/reform.csv", header = T)
+reform = reform %>% mutate(period = 3)
+
+#Adult Education Data Set
+ad_ed = read.csv("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Data/adult_data_clean.csv", header = T)
+ad_ed$education = factor(ad_ed$education)
+ad_ed$education = relevel(ad_ed$education, ref ="HS-grad")
+```
+```{r, include = FALSE}
+options(tinytex.verbose = TRUE)
+```
+
+# Question 1 
+The file reform.csv has a cross-sectional subsample from the German Socio-Economic Panel, which collected data on doctor visits before and after a major health care reform that took place in 1997. The reform increased the copayments for prescription drugs by up to 200% and imposed upper limits on the reimbursement of physicians by the state insurance. The outcome is the number of doctor visits in a three month period. The descriptions of the variables are:
+
+|       -**id**:The patient’s ID number 
+|       -**numvisit**:  Number of doctor visits in a 3-month period 
+|       -**reform**: Before (reform=0) or after (reform=1) the reform 
+|       -**badh**:      Person is in bad health? (1=yes, 0=no) 
+|       -**age**:       Age in years 
+|       -**educ**:      Education in years 
+|       -**loginc**:    Logarithm of income
+
+(a) [5 points] Fit a Poisson regression model (with all possible predictors included, other than id) to see whether the reform affected the number of doctor visits. Formulate the model so that the estimated rates are per 1-month of follow-up. Report the rate ratio for the reform variable and interpret.
+
+(b) [2 points] Calculate and interpret the rate ratio for age.
+
+(c) [2 points] Estimate the 1-month rate of visits for a 30 year old person before the reform, with 12 years education, in bad health, and with an average income (so that loginc = 7.6989). Be sure to specify the proper units of the rate.
+
+(d) [1 point] Estimate the 1-year rate for the person from part (c).
+
+(e) [2 points] Compute the ratio of 1-month visit rates corresponding to a 10 year increase in age, assuming all other variables are held constant.
+\newpage
+
+## Solution
+### Part A
+To fit a Poisson regression model with all the possible predictors included in 
+the question, we will use the glm function. However we first need to deal with 
+the offset situation. We will mutate our current reform data to have another 
+column of the number 3 to represent the period of time for the number of doctor 
+visits. This has been previously added however we can show the first 6 data
+rows look like
+```{r}
+head(reform)
+```
+Now we can run our Possion regression as shown below our code. 
+```{r, include = TRUE}
+fit <- glm(numvisit ~ reform + badh + age + educ + loginc + offset(log(period)), 
+              data= reform, family = poisson)
+summary(fit)$coefficients
+```
+
+The reported rate ratio will be the **exponential** of the reform coefficient in 
+our model named **fit**. 
+
+```{r}
+RR = exp(fit$coefficients[2])
+RR
+```
+
+The rate of number of doctor visits after the health care reform that took place 
+in 1997 is only **79%** as high as the rate when the reform was not in effect.
+
+
+### Part B
+To calculate the rate ratio for age, we will once again take the **exponential**
+of the age coefficient in our model named **fit**.
+
+```{r}
+RR = exp(fit$coefficients[4])
+RR
+```
+
+To interpret this value,the expected number of doctor visits, as age increases
+by 1 year, would increase by 0.4%. 
+  
+### Part C
+We will now estimate the 1-month rate of visits for a 30 year old individual
+with 12 years of education, bad health, and the log incomce of 7.6989.
+
+```{r}
+ndat <- data.frame(age = 30, reform = 0, badh = 1, educ = 12, loginc = 7.6989, 
+                   period = 1)
+
+# Predict with type=response will give the estimated rate.
+pred.rate <- predict(fit, newdata = ndat, type="response")
+pred.rate
+```
+
+To conclude, the estimated number of doctor visits for that specific individual 
+would be between **2-3 visits per month**. 
+
+### Part D
+We will estimate the **1-year rate** for the same individual that was estimated
+in part (c). 
+
+```{r}
+ndat <- data.frame(age = 30, reform = 0, badh = 1, educ = 12, loginc = 7.6989, 
+                   period = 12)
+pred.rate1 <- predict(fit, newdata = ndat, type="response")
+pred.rate1
+```
+
+Hence, the estimated number of doctor visits for that specific individual would 
+be between **29-30 visits per year**. 
+
+
+### Part E
+
+
+\newpage
+# Question 2 
+Assume that you have an outcome variable Yi and predictor variable xi for $i = 1,..., n$, with independent observations. Furthermore, assume that you have the following model:
+
+$$
+Y_i|x_i \sim \text{Poission}(\lambda_i)
+$$
+with 
+
+$$
+\log(\lambda_i) = \beta x_i
+$$
+(a) [3 Points] Find the log-likelihood $\ell(\beta | y_i)$.
+
+(b) [5 Points] Assume you want to find the maximum likelihood estimate of $\beta$. Derive the Newton-Raphson update for $\beta^{(k+1)}$ given you have $\beta^{(k)}$.
+
+## Solution
+### Part A
+Let the likelihood function be:
+
+$$
+ L(\beta|y_i) = \prod_{i = 1}^{n}\frac{e^{-\lambda}\lambda^{y_i}}{y_i!}
+$$
+Then the log-likelihood will be:
+$$
+\begin{aligned}
+\ell(\beta|y_i) &= \sum_{i = 1}^{n}\log(e^{\lambda_i}\lambda^{y_i}_i) - \log(y_i!) \\
+                &= \sum_{i = 1}^{n} -\lambda_i + \sum_{i = 1}^{n}y_i\log(\lambda_i) - \sum_{i = 1}^{n}\log(y_i!) \\
+\end{aligned}
+$$
+
+Now $\log(\lambda_i)$ = $\beta x_i$ and $\lambda_i = e^{\beta x_i}$
+
+Hence we get the log-likelihood to be:
+
+$$
+\ell(\beta|y_i) = \sum_{i = 1}^{n} -e^{\beta x_i} + \sum_{i = 1}^{n}y_i\beta x_i - \sum_{i = 1}^{n}\log(y_i!)
+$$
+\newpage
+
+### Part B
+$$
+\begin{aligned}
+\frac{\partial \ell(\beta|y_i)}{\partial \beta} &= \sum_{i = 1}^{n} -x_ie^{\beta x_i} + \sum_{i = 1}^{n}y_i x_i \\
+                &= \sum_{i = 1}^{n} x_i(y_i - e^{\beta x_i} ) \\
+                &= \ell'(\beta|y_i) \\\\
+\frac{\partial^2 \ell(\beta|y_i)}{\partial \beta^2} &= -\sum_{i = 1}^{n}x_i^2e^{\beta x_i} \\
+                &= \ell''(\beta|y_i) 
+\end{aligned}
+$$
+Hence the Newton-Raphson method will be as follows:
+
+$$
+\begin{aligned}
+\beta^{(k + 1)} &= \beta_k - \frac{\ell'(\beta|y_i)}{\ell''(\beta|y_i)} \\
+                &= \beta_k + \frac{\sum_{i = 1}^{n} x_i(y_i - e^{\beta x_i} )}{\sum_{i = 1}^{n}x_i^2e^{\beta x_i}} \\
+\end{aligned}
+$$
+
+\newpage
+
+# Question 3 
+[5 points] Refer to the model in Question 2. Use the optim() function in R to find the maximum-likelihood estimate of $\beta$. Test the function using data from reform.csv with numvisit as $Y_i$ and age as $x_i$. Don’t use an offset for this part.
+
+## Solution
+```{r}
+fit = glm(numvisit ~ age, data = reform, family = poisson)
+summary(fit)$coefficients
+
+yi = reform$numvisit
+xi = reform$age
+
+log.lik.pr = function(par){
+  b0 = par[1]
+  b1 = par[2]
+  
+  lam = exp(b0 + b1*xi)
+  
+  -sum(dpois(yi, lambda = lam, log = TRUE))
+}
+
+opt.pr = optim(par = list(b0 = 1, b1 = 1), fn = log.lik.pr)
+opt.pr$par
+```
+\newpage
+
+# Question 4 
+The file adult data clean.csv contains education, demographic, and in- come information from the US census database as of 1994. The three variables of interest are:
+
+|       -**education**: The education level (HS-grad, Bachelors, Masters, Doctorate)
+|       -**age**:  The age of the individual 
+|       -**sex**: The sex of the individual
+
+You should run the following code to make sure that HS-grad is the reference category for education, assuming that you read the csv file into a data object called a.data:
+
+a.data\$education <- factor(a.data$education) \
+a.data\$education <- relevel(a.data\$education, ref="HS-grad")
+
+(a) [2 Points] Run a multinomial logistic regression model with education as the out- come and age and sex as predictors. Make sure that HS-grad is the reference category for the outcome.
+
+(b) [6 Points] Using odds ratios calculated from the model fit, describe the effects of age and sex on the odds of an individual having a Bachelors, Masters, and Doctorate (each compared to the reference category).
+
+## Solution 
+### Part A
+To run the multinomial regression, we will be using the nnet package. Our 
+reference category will be HS-grad. When running the model we get:
+```{r}
+fit =  multinom(education~ age + sex, data = ad_ed)
+fit
+```
+\newpage 
+
+### Part B
+Let us first make a few tables to indicate each category of education vs. a 
+HS-Grad.
+
+```{r, evaluate = FALSE, include=FALSE}
+coef = summary(fit)$coefficients
+stderrs = summary(fit)$standard.errors
+stderrs
+
+
+Bachodds = data.frame(Coefficients = c("Constant", "Age", "Sex (Male)"),
+                      Estimates = round(c(coef[1,1], coef[1,2], coef[1,3]),
+                                        digits = 4),
+                      StandardErrors = round(c(stderrs[1,1], stderrs[1,2], 
+                                               stderrs[1,3]), digits = 4))
+
+add_title(table = reactable(Bachodds), title = "Bachelors vs. HS-Grads")
+
+Docodds = data.frame(Coefficients = c("Constant", "Age", "Sex (Male)"),
+                      Estimates = round(c(coef[2,1], coef[2,2], coef[2,3]),
+                                        digits = 4),
+                      StandardErrors = round(c(stderrs[2,1], stderrs[2,2], 
+                                               stderrs[2,3]), digits = 4))
+
+add_title(table = reactable(Docodds, bordered = TRUE), 
+          title = "Doctrate vs. HS-Grads")
+
+Masodds = data.frame(Coefficients = c("Constant", "Age", "Sex (Male)"),
+                     Estimates = round(c(coef[3,1], coef[3,2], coef[3,3]),
+                                       digits = 4),
+                     StandardErrors = round(c(stderrs[3,1], stderrs[3,2], 
+                                              stderrs[3,3]), digits = 4))
+
+add_title(table = reactable(Masodds, bordered = TRUE), 
+          title = "Masters vs. HS-Grads")
+```
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Data Analysis Assessments/Assignment 4/R Images/Bach vs. HS-Grads.png")
+knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Data Analysis Assessments/Assignment 4/R Images/Masters vs. HS-Grads.png")
+knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Data Analysis Assessments/Assignment 4/R Images/Doctrate vs. HSGrads.png")
+```
+\newpage
+
+***Odds of an individual with a bachelors vs. high school graduate***:
+
+Age: $e^{-0.007} = 0.9930$
+
+The odds of having a **bachelors** vs. a high school graduate is **0.9930**
+given that **age differs by 1 year** and their sex is constant. 
+
+Sex: $e^{0.09678} = 1.1016$
+
+The odds of having a **bachelors** vs. a high school graduate is **0.9930**
+given that the **sex of the individual is male** and their age is constant. 
+\
+\
+
+***Odds of an individual with a masters vs. high school graduate***:
+
+Age: $e^{0.0287} = 1.0291$
+
+The odds of having a **masters** vs. a high school graduate is **1.0291**
+given that **age differs by 1 year** and their sex is constant. 
+
+Sex: $e^{0.0078} = 1.0078$
+
+The odds of having a **masters** vs. a high school graduate is **1.0078**
+given that the **sex of the individual is male** and their age is constant.
+
+\
+\
+
+***Odds of an individual with a doctorate vs. high school graduate***:
+
+Age: $e^{0.0463} = 1.0474$
+
+The odds of having a **doctorate** vs. a high school graduate is **1.0474**
+given that **age differs by 1 year** and their sex is constant. 
+
+Sex: $e^{0.5286} = 1.6966$
+
+The odds of having a **doctorate** vs. a high school graduate is **1.6966**
+given that the **sex of the individual is male** and their age is constant.
+
+
