@@ -1,0 +1,178 @@
+---
+title: "4330 Assignment 3"
+author: 'Ravish Kamath: 213893664'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+
+header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{accents}
+- \pagestyle{fancy}
+- \fancyhead[CO,CE]{4630 Assignment 1 R Code}
+- \fancyhead[RO,RE]{Ravish Kamath 213893664}
+---
+
+```{r, eval = TRUE, echo = FALSE}
+CO2df = read.table('/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Data/CO2.txt'
+                   , header = TRUE)
+df = read.csv('/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Data/acath2.csv'
+              , header = TRUE)
+library("pROC")
+library("car")
+```
+```{r, include = FALSE}
+options(tinytex.verbose = TRUE)
+```
+
+# Question 1 
+Hourly carbon monoxide (CO) averages were recorded on summer week- days at a measurement station in Los Angles. The station was established by the Environmental Protection Agency as part of a larger study to assess the effectiveness of the catalytic converter. It was located about 25 feet from the San Diego Freeway, which in this particular area is located at 145 degrees north. It was located such that winds from 145 to 325 degrees (which in the summer are the prevalent wind directions during the daylight hours) transport the CO emissions from the highway toward the measurement station. Aggregate measurements were recorded for each hour of the day 1 to 24 and the data set is available in the file CO2.txt. Note: you can load this file in R using read.table() and setting the argument header = TRUE.
+
+|       Hour - hour of the day, from midnight to midnight
+|       CO   - average summer weekday CO concentration (parts per million)
+|       TD   - average weekday traffic density (traffic count/traffic speed)
+|       WS   - average perpendicular wind-speed component (wind speed x cos(wind direction - 235 degrees))
+
+(a) **[5 points]** Run a linear regression model to examine the effect of weekday traffic density and wind-speed component on CO concentration. Report the estimated slope parameters and their confidence intervals. 
+(b) **[3 points]** Examine residual plots in the model from part (a). Do you think any of the linear regression assumptions have been violated? Explain.
+(c) **[5 points]** Run a weighted least-sqaures model using the same outcome and predictors from part(a). Have the estimates and confidence intervals changed much? Explain.
+
+\newpage
+## Solution 
+
+### Part A
+```{r}
+fit = lm(CO ~ Traffic + Wind, data = CO2df)
+summary(fit)
+confint(fit)
+```
+$\beta_0 = 1.274461$ and C.I is **(0.8624, 1.6865)**.
+
+$\beta_1  = 0.018290$ and C.I. is **(0.0155, 0.0211)**
+
+$\beta_2 = 0.174747$ and C.I. is **(0.0567, 0.2928) **
+
+### Part B
+**Residual vs. Fitted**
+```{r}
+plot(fit$fitted.values, fit$residuals, pch=19, col="darkgreen", cex=0.5, xlab = 'Fitted Values',
+     ylab = 'Residuals', main = 'Residual vs. Fitted')
+abline(h=0, lty=2, lwd=2, col="red")
+```
+
+For the Residual vs. Fitted plot, I would say that there is no discernible change in the variation nor any pattern. Hence it has not violated the error variance is constant.
+\newpage
+**Residual vs. Predictors**
+```{r}
+plot(CO2df$Traffic, fit$residuals, pch=19, col="darkgreen", cex=0.5, xlab = 'Traffic',
+     ylab = 'Residuals', main = 'Residual vs. Traffic')
+abline(h=0, lty=2, lwd=2, col="red")
+```
+\newpage
+```{r}
+plot(CO2df$Wind, fit$residuals, pch=19, col="darkgreen", cex=0.5, xlab = 'Wind', 
+     ylab = 'Residuals', main = 'Residual vs. Wind')
+abline(h=0, lty=2, lwd=2, col="red")
+```
+
+I would say for the first plot shows no clear pattern, hence there is no violation, however the second plot (Residual vs. Wind) does tend to show a parabola pattern. This may require squaring the wind variable. 
+
+```{r}
+#Normality Plot
+par(mfrow = c(1,2))
+hist(fit$residuals, xlab = 'Residuals')
+qqPlot(scale(fit$residuals), main ='QQ-Plot', ylab = 'Residuals'); abline(0,1)
+```
+
+Based of the histogram and qqplot, it does seem violate the assumption that it comes from a normal distribution.
+
+### Part C
+```{r}
+res.fit <- lm(abs(fit$residuals) ~ fit$fitted.values)
+w <- 1/(res.fit$fitted.values^2)
+wls.fit <- lm(CO ~ Traffic + Wind, data=CO2df, weights=w)
+summary(wls.fit)
+confint(wls.fit)
+```
+No the estimates and confidence intervals have not changed much, which means that the residuals do follow a constant variance.
+
+\newpage
+# Question 2
+Recall the chest pain data set from Assignment 2. This data set is from the Duke University Cardiovascular Disease Databank and consists of 2258 patients and 6 variables. The patients were referred to Duke University Medical Center for chest pain. The variables included in the data set acath2.csv are the following:
+
+|   - sex: sex of the patient (0 = male, 1 = female)
+|   - age: age of the patient
+|   - cad.dur: duration of symptoms of coronary artery disease
+|   - cholest: cholesterol (in mg)
+|   - sigdz: significant coronary disease by cardiac catheterization (defined as $\geq 75\%$    |             diameter narrowing in at least one important coronary artery - 1 = yes, 0 = no)
+|   - tvdlm: severe coronary disease (defined as three vessel or left main disease by cardiac   |            catheterization - 1 = yes, 0 = no)
+
+(a) **[4 points]** Run a logistic regression model to see the effect of cholesterol (continuous measure) on significant coronary disease (sigdz). Report the odds ratio and interpret. Calculate and interpret a 95% confidence interval for the odds ratio. 
+(b) **[3 points]** Calculate the predicted probability of significant coronary disease for an individual with cholesterol equal to 400.
+(c) **[1 point]** Do you think the expression in (b) can be used to accurately predict significant coronary disease in the general population? Explain.
+(d) **[4 points]** Run another logistic regression model to see the effect of cholesterol on sigdz, but this time adjust for age and sex. Report the odds ratio. From this new model fit do you think there is evidence that age and sex are confounders in the cholesterol/coronary disease relationship? Explain. (Hint: it has nothing to do with significance of the predictor variables).
+(e) **[5 points]** Create an ROC curve for each of the models in part (a) and (d). Report the AUC for each one. Which model has better predictive accuracy? Explain.
+
+## Solution 
+### Part A
+```{r}
+fit = glm(sigdz ~ cholest, data=df, family=binomial)
+summary(fit)
+beta1_OR = exp(fit$coefficients[2])
+```
+
+Since our odds ratio is **1.006246**, the odds of having significant coronary disease by cardiac catheterization **increases by a factor of 1.006246** as your cholesterol increases by 1 unit.
+
+```{r}
+CI = confint(fit, level = 0.95)
+new_CI = c(exp(CI[2,1]), exp(CI[2,2]))
+new_CI
+```
+
+Since the confidence interval **does not overlap 1**, then we can say **there is an association** between significant coronary disease and cholesterol. 
+
+### Part B
+```{r}
+n.dat <- data.frame(cholest = 400)
+predict(fit, newdata = n.dat, type="response")
+```
+
+### Part C
+I would say that the expression in (b) cannot be used to accurately predict significant coronary disease for a general population because the data set used, were for patients that already had some prior chest pain. These are two different populations of interest, hence, it is not a good predictive model.
+
+
+
+### Part D
+```{r}
+fit2 = glm(sigdz ~ cholest + age + sex, data = df, family = binomial)
+summary(fit2)
+betas = as.vector(fit2$coefficients)
+exp(betas)
+```
+$\beta_1$ OR would be 1.0090463.
+
+$\beta_2$ OR would be 1.0724942.
+
+$\beta_3$ OR would be 0.1231459.
+
+To identify whether Age and Sex are confounders for significant coronary diseases and cholesterol level, we should see a difference in our estimated coefficient for cholesterol. When comparing the two models, fit and fit2, we can see that the $\beta_1$ coefficient for cholesterol has changed, though not by much, shows that Age and Sex are a potential confounder to the model. 
+
+
+
+### Part E
+```{r}
+pred.val1 = predict(fit)
+pred.val2 = predict(fit2)
+par(mfrow = c(1,2))
+
+auc(df$sigdz, pred.val1, plot=TRUE, auc.polygon=TRUE, 
+    auc.polygon.col="lightblue", asp=FALSE, main = 'Model with Cholesterol')
+
+auc(df$sigdz, pred.val2, plot=TRUE, auc.polygon=TRUE, 
+    auc.polygon.col="lightblue", asp=FALSE, main = 'Model with Cholest, Age & Sex')
+```
+
+I would say that the model with the added predictors, age and sex, would be the better model. If we see based of the ROC curves, the 2nd model to  be closer to the top left corner of the plot. This signifies that we are getting higher value for sensitivity as well as specificity. Furthermore, the AUC for the second model is 0.7887 which is better than the previous model with only 0.5887.
+
+
+
