@@ -1,4 +1,4 @@
-dat = read.csv('/Users/ravishkamath/Downloads/fev.csv', header = TRUE)
+dat = read.csv(file.choose(), header = TRUE)
 View(dat)
 
 #Part 1
