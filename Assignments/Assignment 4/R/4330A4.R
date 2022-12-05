@@ -23,7 +23,6 @@ ad_ed$education = relevel(ad_ed$education, ref ="HS-grad")
 
 # Question 1 --------------------------------------------------------------
 # Part A
-
 fit <- glm(numvisit ~ reform + badh + age + educ + loginc + offset(log(period)), 
               data= reform, family = poisson)
 summary(fit)
@@ -65,30 +64,30 @@ pred.rate1
 # between 29-30 visits per year. 
 
 # Part E
-
+exp(10*fit$coefficients[4])
 
 
 # Question 2 --------------------------------------------------------------
 #Handwritten notes
 
 # Question 3 --------------------------------------------------------------
+fit = glm(numvisit ~ age - 1, data = reform, family = poisson)
+summary(fit)$coefficients
 
-fit = glm(numvisit ~ age, data = reform, family = poisson)
-summary(fit)
 
 yi = reform$numvisit
 xi = reform$age
 
 log.lik.pr = function(par){
-  b0 = par[1]
-  b1 = par[2]
+  b = par[1]
   
-  lam = exp(b0 + b1*xi)
+  lam = exp(b*xi)
   
   -sum(dpois(yi, lambda = lam, log = TRUE))
 }
 
-opt.pr = optim(par = list(b0 = 0, b1 = 0), fn = log.lik.pr)
+opt.pr = optim(par = list(b = 1), fn = log.lik.pr, method = "Brent", 
+               lower=-10, upper=10)
 opt.pr$par
 
 # Question 4 --------------------------------------------------------------

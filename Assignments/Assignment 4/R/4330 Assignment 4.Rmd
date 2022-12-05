@@ -15,7 +15,6 @@ header-includes:
 ---
 
 ```{r, eval = TRUE, echo = FALSE, include = "FALSE"}
-
 library(magrittr)
 library(dplyr)
 library(nnet)
@@ -46,15 +45,15 @@ The file reform.csv has a cross-sectional subsample from the German Socio-Econom
 |       -**educ**:      Education in years 
 |       -**loginc**:    Logarithm of income
 
-(a) [5 points] Fit a Poisson regression model (with all possible predictors included, other than id) to see whether the reform affected the number of doctor visits. Formulate the model so that the estimated rates are per 1-month of follow-up. Report the rate ratio for the reform variable and interpret.
+(a) **[5 points]** Fit a Poisson regression model (with all possible predictors included, other than id) to see whether the reform affected the number of doctor visits. Formulate the model so that the estimated rates are per 1-month of follow-up. Report the rate ratio for the reform variable and interpret.
 
-(b) [2 points] Calculate and interpret the rate ratio for age.
+(b) **[2 points]** Calculate and interpret the rate ratio for age.
 
-(c) [2 points] Estimate the 1-month rate of visits for a 30 year old person before the reform, with 12 years education, in bad health, and with an average income (so that loginc = 7.6989). Be sure to specify the proper units of the rate.
+(c) **[2 points]** Estimate the 1-month rate of visits for a 30 year old person before the reform, with 12 years education, in bad health, and with an average income (so that loginc = 7.6989). Be sure to specify the proper units of the rate.
 
-(d) [1 point] Estimate the 1-year rate for the person from part (c).
+(d) **[1 point]** Estimate the 1-year rate for the person from part (c).
 
-(e) [2 points] Compute the ratio of 1-month visit rates corresponding to a 10 year increase in age, assuming all other variables are held constant.
+(e) **[2 points]** Compute the ratio of 1-month visit rates corresponding to a 10 year increase in age, assuming all other variables are held constant.
 \newpage
 
 ## Solution
@@ -147,9 +146,9 @@ with
 $$
 \log(\lambda_i) = \beta x_i
 $$
-(a) [3 Points] Find the log-likelihood $\ell(\beta | y_i)$.
+(a) **[3 Points]** Find the log-likelihood $\ell(\beta | y_i)$.
 
-(b) [5 Points] Assume you want to find the maximum likelihood estimate of $\beta$. Derive the Newton-Raphson update for $\beta^{(k+1)}$ given you have $\beta^{(k)}$.
+(b) **[5 Points]** Assume you want to find the maximum likelihood estimate of $\beta$. Derive the Newton-Raphson update for $\beta^{(k+1)}$ given you have $\beta^{(k)}$.
 
 ## Solution
 ### Part A
@@ -197,28 +196,30 @@ $$
 \newpage
 
 # Question 3 
-[5 points] Refer to the model in Question 2. Use the optim() function in R to find the maximum-likelihood estimate of $\beta$. Test the function using data from reform.csv with numvisit as $Y_i$ and age as $x_i$. Don’t use an offset for this part.
+**[5 points]** Refer to the model in Question 2. Use the optim() function in R to find the maximum-likelihood estimate of $\beta$. Test the function using data from reform.csv with numvisit as $Y_i$ and age as $x_i$. Don’t use an offset for this part.
 
 ## Solution
 ```{r}
-fit = glm(numvisit ~ age, data = reform, family = poisson)
+fit = glm(numvisit ~ age - 1, data = reform, family = poisson)
 summary(fit)$coefficients
 
 yi = reform$numvisit
 xi = reform$age
 
 log.lik.pr = function(par){
-  b0 = par[1]
-  b1 = par[2]
+  b = par[1]
   
-  lam = exp(b0 + b1*xi)
+  lam = exp(b*xi)
   
   -sum(dpois(yi, lambda = lam, log = TRUE))
 }
 
-opt.pr = optim(par = list(b0 = 1, b1 = 1), fn = log.lik.pr)
+opt.pr = optim(par = list(b = 1), fn = log.lik.pr, method = "Brent", 
+               lower=-10, upper=10)
 opt.pr$par
 ```
+As we can see in both the outputs, we arrive to the same $\beta$ value, when
+using either the glm function or the Newton-Raphson algorithm. 
 \newpage
 
 # Question 4 
@@ -233,9 +234,9 @@ You should run the following code to make sure that HS-grad is the reference cat
 a.data\$education <- factor(a.data$education) \
 a.data\$education <- relevel(a.data\$education, ref="HS-grad")
 
-(a) [2 Points] Run a multinomial logistic regression model with education as the out- come and age and sex as predictors. Make sure that HS-grad is the reference category for the outcome.
+(a) **[2 Points]** Run a multinomial logistic regression model with education as the out- come and age and sex as predictors. Make sure that HS-grad is the reference category for the outcome.
 
-(b) [6 Points] Using odds ratios calculated from the model fit, describe the effects of age and sex on the odds of an individual having a Bachelors, Masters, and Doctorate (each compared to the reference category).
+(b) **[6 Points]** Using odds ratios calculated from the model fit, describe the effects of age and sex on the odds of an individual having a Bachelors, Masters, and Doctorate (each compared to the reference category).
 
 ## Solution 
 ### Part A
@@ -315,7 +316,6 @@ Sex: $e^{0.0078} = 1.0078$
 
 The odds of having a **masters** vs. a high school graduate is **1.0078**
 given that the **sex of the individual is male** and their age is constant.
-
 \
 \
 
