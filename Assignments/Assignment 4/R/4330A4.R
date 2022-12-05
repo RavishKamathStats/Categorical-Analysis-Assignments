@@ -69,7 +69,6 @@ pred.rate1
 
 
 # Question 2 --------------------------------------------------------------
-
 #Handwritten notes
 
 # Question 3 --------------------------------------------------------------
@@ -89,7 +88,7 @@ log.lik.pr = function(par){
   -sum(dpois(yi, lambda = lam, log = TRUE))
 }
 
-opt.pr = optim(par = list(b0 = 1, b1 = 1), fn = log.lik.pr)
+opt.pr = optim(par = list(b0 = 0, b1 = 0), fn = log.lik.pr)
 opt.pr$par
 
 # Question 4 --------------------------------------------------------------

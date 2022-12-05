@@ -131,7 +131,9 @@ be between **29-30 visits per year**.
 
 
 ### Part E
-
+```{r}
+exp(10*fit$coefficients[4])
+```
 
 \newpage
 # Question 2 
