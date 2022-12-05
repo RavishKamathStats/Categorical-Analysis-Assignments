@@ -282,9 +282,9 @@ add_title(table = reactable(Masodds, bordered = TRUE),
           title = "Masters vs. HS-Grads")
 ```
 ```{r, echo = FALSE, out.width="80%", fig.align='center'}
-knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Data Analysis Assessments/Assignment 4/R Images/Bach vs. HS-Grads.png")
-knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Data Analysis Assessments/Assignment 4/R Images/Masters vs. HS-Grads.png")
-knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Data Analysis Assessments/Assignment 4/R Images/Doctrate vs. HSGrads.png")
+knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Assignment 4/R/R Images/Bach vs. HS-Grads.png")
+knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Assignment 4/R/R Images/Masters vs. HS-Grads.png")
+knitr::include_graphics("/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Assignment 4/R/R Images/Doctrate vs. HSGrads.png")
 ```
 \newpage
 
