@@ -70,7 +70,7 @@ odds_ratio
 
 
 #### Question 2 ####
-A2df = read.csv('/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Assignments/Assignment 2/acath2.csv')
+A2df = read.csv('/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Categorical Analysis Assignments/Assignments/Data/acath2.csv')
 View(A2df)
 
 #Part A
