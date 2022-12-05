@@ -1,4 +1,4 @@
-df = read.table('/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Tutorial Assignments/Assignment 3/icudat.txt', header =  TRUE)
+df = read.table(file.choose(), header =  TRUE)
 
 # Part A
 fit <- glm(sta ~ age + sex + pco, data=df, family=binomial)
