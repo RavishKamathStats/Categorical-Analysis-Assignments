@@ -1,4 +1,4 @@
-lungcancer = read.csv('/Users/ravishkamath/Desktop/University/2. York Math/1 MATH/1. Statistics /MATH 4330/3. Assessments/Tutorial Assignments/Assignment 4/lung.csv', header = T)
+lungcancer = read.csv(file.choose(), header = T)
 head(lungcancer)
 
 #Part 1
